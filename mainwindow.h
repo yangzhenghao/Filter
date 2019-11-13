@@ -13,8 +13,12 @@
 #include <QPair>
 #include "opencv2/opencv.hpp"
 #include "slic.h"
+#include "bilateral.h"
 #include <QThread>
 #include <QMutex>
+#include <QMutexLocker>
+#include <QPainter>
+#include <QPen>
 
 namespace Ui {
 class MainWindow;
@@ -31,8 +35,6 @@ public:
     void initUI();
     void initData();
     void initMenu();
-    void BilateralFilter();
-    void toGray();
 
 private:
     Ui::MainWindow *ui;
@@ -48,12 +50,16 @@ private:
     bool isCalculate;
 
     SLIC *s;
+    Bilateral *b;
     QThread *slicThread;            //到底实用一个线程去做，还是两个线程
     QThread *bilateralThread;
+
+    QMutex operateLock;
+    bool isOperate;
 signals:
     void updateFile(bool);
     void startSlic(cv::Mat, int);
-    void startBilateral();
+    void startBilateral(QImage);
 
 public slots:
     void openFile();
