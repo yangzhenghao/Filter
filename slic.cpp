@@ -1,6 +1,6 @@
 ﻿#include "slic.h"
 #include <cmath>
-
+#include <QDebug>
 
 SLIC::SLIC(QObject *parent) : QObject(parent)
 {
@@ -10,8 +10,10 @@ SLIC::SLIC(QObject *parent) : QObject(parent)
     clusterNum=100;
 }
 
-void SLIC::run()
+void SLIC::run(cv::Mat img,int num)
 {
+    qDebug()<<"SLIC:"<<QThread::currentThreadId();
+    setClusterNumAndImage(img, num);
     initCluster();
     generateSuperPixel();
     checkConnectivity();
@@ -281,7 +283,8 @@ void SLIC::checkConnectivity()
    }
    cv::cvtColor(newImage, newImage1,CV_Lab2RGB);
    newImage=newImage1;
-    cv::imwrite("temp1.jpg", newImage);
+   emit resultReady(cvMat2QImage(newImage));
+   cv::imwrite("temp1.jpg", newImage);
 }
 
 void SLIC::BGR2LAB()

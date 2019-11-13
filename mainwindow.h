@@ -13,6 +13,8 @@
 #include <QPair>
 #include "opencv2/opencv.hpp"
 #include "slic.h"
+#include <QThread>
+#include <QMutex>
 
 namespace Ui {
 class MainWindow;
@@ -27,6 +29,7 @@ public:
     ~MainWindow();
 
     void initUI();
+    void initData();
     void initMenu();
     void BilateralFilter();
     void toGray();
@@ -37,17 +40,20 @@ private:
     QImage destImage;
     QImage grayImage;
     QVector<QVector<uchar>> grayValues;
+    QString imageName;
 
     QMenu fileMenu;
     QMenu filterMenu;
-
-    QString imageName;
-
     QAction *openAction, * saveAction, *bilateralAction,*slicAction;
-
     bool isCalculate;
+
+    SLIC *s;
+    QThread *slicThread;            //到底实用一个线程去做，还是两个线程
+    QThread *bilateralThread;
 signals:
     void updateFile(bool);
+    void startSlic(cv::Mat, int);
+    void startBilateral();
 
 public slots:
     void openFile();
@@ -55,6 +61,7 @@ public slots:
     void bilateralSlot();
     void slicSlot();
     void updateImage(bool flag);
+    void handleResults(QImage im);
 };
 
 #endif // MAINWINDOW_H

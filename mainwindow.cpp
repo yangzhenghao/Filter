@@ -7,9 +7,10 @@
 #include <QDebug>
 #include <cmath>
 #include <vector>
-#include <function.h>
+#include <QMetaType>
 #include <QPainter>
 #include <QPen>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -22,12 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initUI();
     initMenu();
-
-    this->setWindowTitle("Filter");
-    ui->label->setStyleSheet("border:2px solid black;");
-    ui->destLabel->setStyleSheet("border:2px solid black;");
-    ui->label->setText("Source Image");
-    ui->destLabel->setText("dest Image");
+    initData();
 
     connect(this, SIGNAL(updateFile(bool)),this, SLOT(updateImage(bool)));
 }
@@ -43,13 +39,33 @@ MainWindow::~MainWindow()
         delete bilateralAction;
     if(slicAction)
         delete slicAction;
+    if(slicThread)
+    {
+        slicThread->quit();
+        slicThread->wait();
+    }
+    if(bilateralThread)
+    {
+        bilateralThread->quit();
+        bilateralThread->wait();
+    }
 }
 
 void MainWindow::initUI()
 {
-
+    this->setWindowTitle("Filter");
+    ui->label->setStyleSheet("border:2px solid black;");
+    ui->destLabel->setStyleSheet("border:2px solid black;");
+    ui->label->setText("Source Image");
+    ui->destLabel->setText("dest Image");
 }
 
+void MainWindow::initData()
+{
+    s=NULL;
+    slicThread=NULL;
+    bilateralThread=NULL;
+}
 void MainWindow::initMenu()
 {
     fileMenu.setTitle(QStringLiteral("文件"));
@@ -140,11 +156,30 @@ void MainWindow::bilateralSlot()
 
 void MainWindow::slicSlot()
 {
-    SLIC s;
+    qDebug()<<"main ui:"<<QThread::currentThreadId();
+    if(s)
+        delete s;
+    if(slicThread)
+        return;
+    slicThread = new QThread();
+    SLIC *s=new SLIC();
+    s->moveToThread(slicThread);
     cv::Mat img=QImage2cvMat(oriImage);
-    s.setClusterNumAndImage(img,360);
-    s.run();
-    destImage=cvMat2QImage(s.getResult());
+
+    qRegisterMetaType< cv::Mat >("cv::Mat");
+    connect(slicThread, &QThread::finished, slicThread, &QObject::deleteLater);
+    connect(slicThread, &QThread::finished, s, &QObject::deleteLater);
+    connect(this, SIGNAL(startSlic(cv::Mat,int)), s, SLOT(run(cv::Mat,int)));
+    connect(s,SIGNAL(resultReady(QImage)), this, SLOT(handleResults(QImage)));
+    slicThread->start();
+    emit startSlic(img, 360);
+    //s->run(img,360);
+
+}
+
+void MainWindow::handleResults(QImage im)
+{
+    destImage=im;
     emit updateFile(false);
 }
 

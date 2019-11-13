@@ -13,6 +13,8 @@
 #include <QPixmap>
 #include <QVector>
 #include <QPair>
+#include <QThread>
+#include "function.h"
 
 class SLIC : public QObject
 {
@@ -25,7 +27,7 @@ public:
     double computeDis(int ci, int x,int y);
     void generateSuperPixel();
     void checkConnectivity();
-    void run();
+
 
 
     cv::Mat getResult(){return newImage;}
@@ -53,8 +55,9 @@ private:
     
 
 signals:
-
+    void resultReady(QImage im);
 public slots:
+    void run(cv::Mat img,int num);
     void setClusterNumAndImage(cv::Mat img,int num){image=img;clusterNum=num;}
 };
 
