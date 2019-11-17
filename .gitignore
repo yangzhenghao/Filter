@@ -4,3 +4,11 @@ Debug/*
 Filter*
 Make*
 *.stash
+Filter.pro.user
+*.pro
+Lenna_new.jpg
+ui_mainwindow.h
+*.user
+*.pro
+*.user
+ui_mainwindow.h
