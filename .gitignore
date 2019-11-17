@@ -1,0 +1,6 @@
+Release/*
+Debug/*
+*pro*
+Filter*
+Make*
+*.stash
