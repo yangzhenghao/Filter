@@ -94,26 +94,23 @@ void MainWindow::initMenu()
 }
 void MainWindow::bilateralSlot()
 {
+    //operateLock.lock();
     if(isOperate)
     {
         QMessageBox::critical(NULL, QStringLiteral("警告"),QStringLiteral("请等待上一次操作结果") );
+        //operateLock.unlock();
         return;
     }
-    operateLock.lock();
-    if(isOperate)
-    {
-        QMessageBox::critical(NULL, QStringLiteral("警告"),QStringLiteral("请等待上一次操作结果") );
-        operateLock.unlock();
-        return;
-    }
+    ui->informLabel->setText(QStringLiteral(""));
     isOperate=true;
-    operateLock.unlock();
+    //operateLock.unlock();
     isCalculate=false;
     qDebug()<<"main ui:"<<QThread::currentThreadId();
     if(b)
         delete b;
-    if(bilateralThread)
-        return;
+    if(!bilateralThread)
+        //delete bilateralThread;
+        //return;
     bilateralThread = new QThread();
     b=new Bilateral();
     b->moveToThread(bilateralThread);
@@ -129,28 +126,25 @@ void MainWindow::bilateralSlot()
 }
 
 void MainWindow::slicSlot()
-{ 
+{
+    //operateLock.lock();
     if(isOperate)
     {
         QMessageBox::critical(NULL, QStringLiteral("警告"),QStringLiteral("请等待上一次操作结果") );
+        //operateLock.unlock();
         return;
     }
-    operateLock.lock();
-    if(isOperate)
-    {
-        QMessageBox::critical(NULL, QStringLiteral("警告"),QStringLiteral("请等待上一次操作结果") );
-        operateLock.unlock();
-        return;
-    }
+    ui->informLabel->setText(QStringLiteral(""));
     isOperate=true;
-    operateLock.unlock();
+    //operateLock.unlock();
     isCalculate=false;
     qDebug()<<"main ui:"<<QThread::currentThreadId();
     isCalculate=false;
     if(s)
         delete s;
-    if(slicThread)
-        return;
+    if(!slicThread)
+        //delete slicThread;
+        //return;
     slicThread = new QThread();
     s=new SLIC();
     s->moveToThread(slicThread);
@@ -162,7 +156,7 @@ void MainWindow::slicSlot()
     connect(this, SIGNAL(startSlic(cv::Mat,int)), s, SLOT(run(cv::Mat,int)));
     connect(s,SIGNAL(resultReady(QImage)), this, SLOT(handleResults(QImage)));
     slicThread->start();
-     ui->destLabel->setText(QStringLiteral("正在晶格化...请稍等"));
+    ui->destLabel->setText(QStringLiteral("正在晶格化...请稍等"));
     emit startSlic(img, 360);
 }
 
@@ -170,9 +164,9 @@ void MainWindow::handleResults(QImage im)
 {
     destImage=im;
     emit updateFile(false);
-    operateLock.lock();
+//    operateLock.lock();
     isOperate=false;
-    operateLock.unlock();
+//    operateLock.unlock();
 }
 
 
@@ -263,4 +257,5 @@ void MainWindow::saveFile()
     }
     destImage.save(filename1);
     QMessageBox::information(NULL, QStringLiteral("提醒"),QStringLiteral("导出成功, 已存至相同目录") );
+    ui->informLabel->setText(QStringLiteral("已导出"));
 }
